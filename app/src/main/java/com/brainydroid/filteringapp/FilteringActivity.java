@@ -68,20 +68,19 @@ public class FilteringActivity extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.i(TAG, "Item " + position + " clicked (id " + id + ")");
-                if (addSelection(adapter.getItemById(id))) {
-                    autoTextView.setText("");
-                }
+                addSelection(adapter.getItemById(id));
+                autoTextView.setText("");
             }
         });
     }
 
     public void onAddItemClickListener(View view) {
         Log.i(TAG, "Adding item based on text");
-        MetaString userMetaString = new MetaString(autoTextView.getText().toString());
-        if (addSelection(userMetaString)) {
+        String userString = autoTextView.getText().toString();
+        if (addSelection(MetaString.getInstance(userString))) {
             autoTextView.setText("");
             // Update adapter
-            adapter.addPossibility(userMetaString);
+            adapter.addPossibility(userString);
             // TODO: save this new item at the persistence layer
         }
     }
@@ -98,7 +97,7 @@ public class FilteringActivity extends ActionBarActivity {
         Log.d(TAG, "Adding selection");
 
         if (selectionViews.containsKey(ms)) {
-            Toast.makeText(this, "You already selected this item", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "You already selected this item", Toast.LENGTH_SHORT).show();
             return false;
         }
 
@@ -132,6 +131,3 @@ public class FilteringActivity extends ActionBarActivity {
     }
 
 }
-
-// TODO: empty box flicker (update when still empty) - ids?
-// TODO: user-added item fails re-adding prevention  -

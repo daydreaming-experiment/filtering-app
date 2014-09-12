@@ -71,11 +71,11 @@ public class Filterer extends Filter {
     private Tree<String> bkTree = new Tree<String>();
     private IDistance distance = new LevenshteinDistance();
 
-    public void addPossibility(MetaString metaPossibility) {
-        if (!possibilities.contains(metaPossibility.getOriginal())) {
-            Log.d(TAG, "Adding possibility '" + metaPossibility.getOriginal() + "'");
-            possibilities.add(metaPossibility.getOriginal());
-            HashMap<String, HashSet<String>> newMatches = addToMatchMap(metaPossibility);
+    public void addPossibility(String possibility) {
+        if (!possibilities.contains(possibility)) {
+            Log.d(TAG, "Adding possibility '" + possibility + "'");
+            possibilities.add(possibility);
+            HashMap<String, HashSet<String>> newMatches = addToMatchMap(possibility);
             updateBKTree(newMatches);
         } else {
             Log.d(TAG, "Possibility already present, not adding it again");
@@ -177,8 +177,8 @@ public class Filterer extends Filter {
         }
     }
 
-    private HashMap<String, HashSet<String>> addToMatchMap(MetaString newMetaString) {
-        HashMap<String, HashSet<MetaString>> newTokens = addToTokenMap(newMetaString);
+    private HashMap<String, HashSet<String>> addToMatchMap(String newString) {
+        HashMap<String, HashSet<MetaString>> newTokens = addToTokenMap(newString);
 
         Log.i(TAG, "Adding '" + "' to matchMap");
         HashMap<String, HashSet<String>> newMatches = new HashMap<String, HashSet<String>>();
@@ -204,7 +204,7 @@ public class Filterer extends Filter {
         Log.i(TAG, "Building token map");
 
         for (String s : possibilities) {
-            MetaString ms = new MetaString(s);
+            MetaString ms = MetaString.getInstance(s);
 
             // Add tokens
             for (String token : ms.getTokens()) {
@@ -231,13 +231,14 @@ public class Filterer extends Filter {
         }
     }
 
-    private HashMap<String, HashSet<MetaString>> addToTokenMap(MetaString newMetaString) {
-        Log.d(TAG, "Adding '" + newMetaString.getOriginal() + "' to tokenMap");
+    private HashMap<String, HashSet<MetaString>> addToTokenMap(String newString) {
+        Log.d(TAG, "Adding '" + newString + "' to tokenMap");
 
+        MetaString ms = MetaString.getInstance(newString);
         HashMap<String, HashSet<MetaString>> newTokens = new HashMap<String, HashSet<MetaString>>();
 
         // Add tokens
-        for (String token : newMetaString.getTokens()) {
+        for (String token : ms.getTokens()) {
             if (stopwords.contains(token)) continue;
             if (!tokenMap.containsKey(token)) {
                 tokenMap.put(token, new HashSet<MetaString>());
@@ -245,31 +246,31 @@ public class Filterer extends Filter {
             if (!newTokens.containsKey(token)) {
                 newTokens.put(token, new HashSet<MetaString>());
             }
-            tokenMap.get(token).add(newMetaString);
-            newTokens.get(token).add(newMetaString);
+            tokenMap.get(token).add(ms);
+            newTokens.get(token).add(ms);
         }
 
         // Add tags
-        for (String tag : newMetaString.getTags()) {
+        for (String tag : ms.getTags()) {
             if (!tokenMap.containsKey(tag)) {
                 tokenMap.put(tag, new HashSet<MetaString>());
             }
             if (!newTokens.containsKey(tag)) {
                 newTokens.put(tag, new HashSet<MetaString>());
             }
-            tokenMap.get(tag).add(newMetaString);
-            newTokens.get(tag).add(newMetaString);
+            tokenMap.get(tag).add(ms);
+            newTokens.get(tag).add(ms);
         }
 
         // Finally, add full text
-        if (!tokenMap.containsKey(newMetaString.getLower())) {
-            tokenMap.put(newMetaString.getLower(), new HashSet<MetaString>());
+        if (!tokenMap.containsKey(ms.getLower())) {
+            tokenMap.put(ms.getLower(), new HashSet<MetaString>());
         }
-        if (!newTokens.containsKey(newMetaString.getLower())) {
-            newTokens.put(newMetaString.getLower(), new HashSet<MetaString>());
+        if (!newTokens.containsKey(ms.getLower())) {
+            newTokens.put(ms.getLower(), new HashSet<MetaString>());
         }
-        tokenMap.get(newMetaString.getLower()).add(newMetaString);
-        newTokens.get(newMetaString.getLower()).add(newMetaString);
+        tokenMap.get(ms.getLower()).add(ms);
+        newTokens.get(ms.getLower()).add(ms);
 
         return newTokens;
     }
@@ -317,7 +318,12 @@ public class Filterer extends Filter {
         FilterResults filterResults = new FilterResults();
         if (constraint != null) {
             ArrayList<MetaString> results = search(constraint.toString());
-            filterResults.count = results.size();
+            // We artificially set this to a minimum of 1 because it always transits by Android,
+            // which will unregister its observers if it thinks there are no results.
+            // This will cause the complete list to flicker and be recreated each time we type
+            // a new letter, even if the "Nothing found" text doesn't change. This value isn't
+            // used elsewhere anyway.
+            filterResults.count = Math.max(results.size(), 1);
             filterResults.values = results;
         } else {
             filterResults.count = 0;
@@ -331,6 +337,7 @@ public class Filterer extends Filter {
     @Override
     protected void publishResults(CharSequence constraint, FilterResults results) {
         Log.d(TAG, "Publishing results");
+        //noinspection unchecked
         adapter.setResults((ArrayList<MetaString>)results.values);
     }
 }

@@ -2,6 +2,7 @@ package com.brainydroid.filteringapp.filtering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class MetaString {
 
@@ -19,7 +20,16 @@ public class MetaString {
     private ArrayList<String> tags;
     private String joinedTags;
 
-    public MetaString(String definition) {
+    private static HashMap<String, MetaString> instances = new HashMap<String, MetaString>();
+
+    public static MetaString getInstance(String string) {
+        if (!instances.containsKey(string)) {
+            instances.put(string, new MetaString(string));
+        }
+        return instances.get(string);
+    }
+
+    private MetaString(String definition) {
         this.definition = definition.trim();
         parseDefinition();
     }

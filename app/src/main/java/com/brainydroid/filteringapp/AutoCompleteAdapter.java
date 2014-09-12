@@ -24,6 +24,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
     private static String TAG = "AutoCompleteAdapter";
 
     private LayoutInflater inflater;
+    private Context context;
     private Filterer filter;
     private ArrayList<MetaString> results = null;
     private HashSet<DataSetObserver> observers = new HashSet<DataSetObserver>();
@@ -31,6 +32,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     public AutoCompleteAdapter(Context context, ArrayList<String> possibilities) {
         Log.d(TAG, "Initializing");
+        this.context = context;
         inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         filter = new Filterer(this, possibilities);
     }
@@ -71,7 +73,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
     public MetaString getItem(int position) {
         if (position >= getCount()) throw new ArrayIndexOutOfBoundsException();
         if (areFilterResultsEmpty()) {
-            return new MetaString("Nothing found");
+            return MetaString.getInstance("Nothing found");
         } else {
             return results.get(position);
         }
@@ -109,9 +111,11 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
         }
 
         MetaString item = getItem(position);
-        ((TextView)layout.findViewById(R.id.item_text)).setText(item.getOriginal());
+        TextView text = (TextView)layout.findViewById(R.id.item_text);
+        text.setText(item.getOriginal());
         TextView tagsView = (TextView)layout.findViewById(R.id.item_tags);
         if (!areFilterResultsEmpty()) {
+            text.setTextColor(context.getResources().getColor(android.R.color.black));
             String joinedTags = item.getJoinedTags();
             if (joinedTags == null) {
                 tagsView.setVisibility(View.GONE);
@@ -121,6 +125,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
             }
         } else {
             tagsView.setVisibility(View.GONE);
+            text.setTextColor(context.getResources().getColor(android.R.color.darker_gray));
         }
 
         return layout;
@@ -157,7 +162,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
         }
     }
 
-    public void addPossibility(MetaString metaPossibility) {
-        filter.addPossibility(metaPossibility);
+    public void addPossibility(String possibility) {
+        filter.addPossibility(possibility);
     }
 }
