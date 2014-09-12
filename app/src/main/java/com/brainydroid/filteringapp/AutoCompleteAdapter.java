@@ -27,8 +27,6 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
     private ArrayList<MetaString> results = null;
     private HashSet<DataSetObserver> observers = new HashSet<DataSetObserver>();
 
-    private ArrayList<LinearLayout> selectedViews = new ArrayList<LinearLayout>();
-
     public AutoCompleteAdapter(Context context, ArrayList<String> possibilities) {
         Log.d(TAG, "Initializing");
         inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);

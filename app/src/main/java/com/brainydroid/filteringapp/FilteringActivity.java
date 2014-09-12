@@ -3,12 +3,16 @@ package com.brainydroid.filteringapp;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.brainydroid.filteringapp.filtering.Filterer;
+import com.brainydroid.filteringapp.filtering.MetaString;
 import com.brainydroid.filteringapp.filtering.Timer;
 
 import java.util.ArrayList;
@@ -41,6 +45,8 @@ public class FilteringActivity extends ActionBarActivity {
 
     private Timer timer = new Timer();
     private AutoCompleteTextView textView;
+    private AutoCompleteAdapter adapter;
+    private ArrayList<LinearLayout> selectedViews = new ArrayList<LinearLayout>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +58,17 @@ public class FilteringActivity extends ActionBarActivity {
         AutoCompleteAdapter adapter = new AutoCompleteAdapter(this, possibilities);
         textView = (AutoCompleteTextView)findViewById(R.id.activity_activities_autoCompleteTextView);
         textView.setAdapter(adapter);
+        textView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // TODO: get item from id
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d(TAG, "Nothing selected");
+            }
+        });
     }
 
     @Override
@@ -61,4 +78,11 @@ public class FilteringActivity extends ActionBarActivity {
         ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(textView,
                 InputMethodManager.SHOW_FORCED);
     }
+
+    protected void addSelection(MetaString ms) {
+        // TODO: see if already is selected. If so, toast
+        // TODO: add to selection if not
+        // TODO: add X click listener to remove
+    }
+
 }
