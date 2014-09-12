@@ -16,6 +16,7 @@ import com.brainydroid.filteringapp.filtering.Filterer;
 import com.brainydroid.filteringapp.filtering.MetaString;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class AutoCompleteAdapter implements Filterable, ListAdapter {
@@ -26,6 +27,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
     private Filter filter;
     private ArrayList<MetaString> results = null;
     private HashSet<DataSetObserver> observers = new HashSet<DataSetObserver>();
+    private HashMap<Long,MetaString> idCache = new HashMap<Long,MetaString>();
 
     public AutoCompleteAdapter(Context context, ArrayList<String> possibilities) {
         Log.d(TAG, "Initializing");
@@ -68,7 +70,19 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     @Override
     public long getItemId(int position) {
-        return getItem(position).hashCode();
+        MetaString item = getItem(position);
+        long id = item.hashCode();
+        if (!idCache.containsKey(id)) {
+            idCache.put(id, item);
+        }
+        return id;
+    }
+
+    public MetaString getItemById(long id) {
+        if (!idCache.containsKey(id)) {
+            throw new RuntimeException("Item never shown in list, so id not cached");
+        }
+        return idCache.get(id);
     }
 
     @Override

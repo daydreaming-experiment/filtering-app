@@ -94,4 +94,9 @@ public class MetaString {
     public String getJoinedTags() {
         return joinedTags;
     }
+
+    @Override
+    public int hashCode() {
+        return definition.hashCode();
+    }
 }
