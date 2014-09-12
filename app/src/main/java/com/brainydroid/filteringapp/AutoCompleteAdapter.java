@@ -14,7 +14,6 @@ import android.widget.TextView;
 
 import com.brainydroid.filteringapp.filtering.Filterer;
 import com.brainydroid.filteringapp.filtering.MetaString;
-import com.brainydroid.filteringapp.filtering.Timer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,15 +22,15 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     private static String TAG = "AutoCompleteAdapter";
 
-    private Context context;
     private LayoutInflater inflater;
     private Filter filter;
     private ArrayList<MetaString> results = null;
     private HashSet<DataSetObserver> observers = new HashSet<DataSetObserver>();
 
+    private ArrayList<LinearLayout> selectedViews = new ArrayList<LinearLayout>();
+
     public AutoCompleteAdapter(Context context, ArrayList<String> possibilities) {
         Log.d(TAG, "Initializing");
-        this.context = context;
         inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         filter = new Filterer(this, possibilities);
     }
