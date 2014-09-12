@@ -19,6 +19,7 @@ import com.brainydroid.filteringapp.filtering.MetaString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 
 public class FilteringActivity extends ActionBarActivity {
@@ -49,6 +50,7 @@ public class FilteringActivity extends ActionBarActivity {
     private LayoutInflater inflater;
     private HashMap<MetaString, LinearLayout> selectionViews = new HashMap<MetaString, LinearLayout>();
     private LinearLayout selectionLayout;
+    private HashSet<String> userStrings = new HashSet<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,10 +69,20 @@ public class FilteringActivity extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.i(TAG, "Item " + position + " clicked (id " + id + ")");
-                addSelection(adapter.getItemById(id));
-                autoTextView.setText("");
+                if (addSelection(adapter.getItemById(id))) {
+                    autoTextView.setText("");
+                }
             }
         });
+    }
+
+    public void onAddItemClickListener(View view) {
+        Log.i(TAG, "Adding item based on text");
+        String userString = autoTextView.getText().toString();
+        if (addSelection(new MetaString(userString))) {
+            autoTextView.setText("");
+            userStrings.add(userString);
+        }
     }
 
     @Override
@@ -81,12 +93,12 @@ public class FilteringActivity extends ActionBarActivity {
                 InputMethodManager.SHOW_FORCED);
     }
 
-    protected void addSelection(final MetaString ms) {
+    protected boolean addSelection(final MetaString ms) {
         Log.d(TAG, "Adding selection");
 
-        if (selectionViews.containsKey(ms)) {
+        if (selectionViews.containsKey(ms) || userStrings.contains(ms.getOriginal())) {
             Toast.makeText(this, "You already selected this item", Toast.LENGTH_LONG).show();
-            return;
+            return false;
         }
 
         LinearLayout itemLayout = (LinearLayout)inflater.inflate(R.layout.item_selected_view,
@@ -104,6 +116,8 @@ public class FilteringActivity extends ActionBarActivity {
 
         selectionLayout.addView(itemLayout, 0);
         selectionViews.put(ms, itemLayout);
+
+        return true;
     }
 
     protected void removeSelection(MetaString ms) {

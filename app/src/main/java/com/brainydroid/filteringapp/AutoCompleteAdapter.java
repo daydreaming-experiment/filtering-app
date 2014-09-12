@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.brainydroid.filteringapp.filtering.Filterer;
 import com.brainydroid.filteringapp.filtering.MetaString;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +23,9 @@ import java.util.HashSet;
 public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     private static String TAG = "AutoCompleteAdapter";
+
+    private static int VIEW_TYPE_NORMAL = 0;
+    private static int VIEW_TYPE_NOTHING = 1;
 
     private LayoutInflater inflater;
     private Filter filter;
@@ -35,6 +39,10 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
         filter = new Filterer(this, possibilities);
     }
 
+    public boolean areFilterResultsEmpty() {
+        return results == null || results.size() == 0;
+    }
+
     @Override
     public boolean areAllItemsEnabled() {
         return true;
@@ -43,7 +51,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
     @Override
     public boolean isEnabled(int position) {
         if (position >= getCount()) throw new ArrayIndexOutOfBoundsException();
-        return true;
+        return !areFilterResultsEmpty();  // The "nothing found" item is not active
     }
 
     @Override
@@ -58,14 +66,19 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     @Override
     public int getCount() {
-        if (results == null) return 0;
+        // If no results, we still have one item for "nothing found"
+        if (areFilterResultsEmpty()) return 1;
         return results.size();
     }
 
     @Override
     public MetaString getItem(int position) {
-        if (position >= getCount() || results == null) throw new ArrayIndexOutOfBoundsException();
-        return results.get(position);
+        if (position >= getCount()) throw new ArrayIndexOutOfBoundsException();
+        if (areFilterResultsEmpty()) {
+            return new MetaString("Nothing found");
+        } else {
+            return results.get(position);
+        }
     }
 
     @Override
@@ -90,24 +103,47 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
         return true;
     }
 
+    private int getLayoutTypeId() {
+        if (areFilterResultsEmpty()) {
+            return R.layout.item_nothing;
+        } else {
+            return R.layout.item_view;
+        }
+    }
+
+    private int getViewTypeId() {
+        if (areFilterResultsEmpty()) {
+            return R.id.item_nothing_view;
+        } else {
+            return R.id.item_something_view;
+        }
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LinearLayout layout;
-        if (convertView != null && convertView instanceof LinearLayout) {
-            layout = (LinearLayout)convertView;
+        if (convertView == null || !(convertView instanceof LinearLayout)) {
+            layout = (LinearLayout)inflater.inflate(getLayoutTypeId(), parent, false);
         } else {
-            layout = (LinearLayout)inflater.inflate(R.layout.item_view, parent, false);
+            // If we have the right type of view, keep it. Otherwise inflate.
+            if (convertView.getId() == getViewTypeId()) {
+                layout = (LinearLayout)convertView;
+            } else {
+                layout = (LinearLayout)inflater.inflate(getLayoutTypeId(), parent, false);
+            }
         }
 
         MetaString item = getItem(position);
         ((TextView)layout.findViewById(R.id.item_text)).setText(item.getOriginal());
-        String joinedTags = item.getJoinedTags();
-        TextView tagsView = (TextView)layout.findViewById(R.id.item_tags);
-        if (joinedTags == null) {
-            tagsView.setVisibility(View.GONE);
-        } else {
-            tagsView.setVisibility(View.VISIBLE);
-            tagsView.setText(joinedTags);
+        if (!areFilterResultsEmpty()) {
+            String joinedTags = item.getJoinedTags();
+            TextView tagsView = (TextView)layout.findViewById(R.id.item_tags);
+            if (joinedTags == null) {
+                tagsView.setVisibility(View.GONE);
+            } else {
+                tagsView.setVisibility(View.VISIBLE);
+                tagsView.setText(joinedTags);
+            }
         }
 
         return layout;
@@ -115,17 +151,22 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return 0;
+        if (areFilterResultsEmpty()) {
+            return VIEW_TYPE_NOTHING;
+        } else {
+            return VIEW_TYPE_NORMAL;
+        }
     }
 
     @Override
     public int getViewTypeCount() {
-        return 1;
+        return 2;
     }
 
     @Override
     public boolean isEmpty() {
-        return getCount() == 0;
+        // We're never empty since we always have at least the "Nothing found." item
+        return false;
     }
 
     @Override
@@ -135,8 +176,10 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     public void setResults(ArrayList<MetaString> results) {
         Log.d(TAG, "Setting results");
+        boolean oldResultsEmpty = areFilterResultsEmpty();
         this.results = results;
-        if (observers.size() > 0) {
+        // Don't update if results were empty before and they still are now
+        if (observers.size() > 0 && (areFilterResultsEmpty() != oldResultsEmpty)) {
             for (DataSetObserver observer : observers) {
                 observer.onChanged();
             }

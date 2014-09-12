@@ -4,5 +4,7 @@
     <string name="app_name">Filtering App</string>
     <string name="search_activities">Search activities…</string>
     <string name="action_settings">Settings</string>
+    <string name="nothing_found">Nothing found.</string>
+    <string name="add_item">Add this</string>
 
 </resources>
