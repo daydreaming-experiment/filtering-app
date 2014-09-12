@@ -25,8 +25,11 @@ public abstract class CachingDistance implements IDistance {
         // If we're a substring, consider it exact
         if (isSubString(s, ms.getLower()))
             return 0;
-        for (String token : ms.getTokens())
+        for (String token : ms.getTokens()) {
+            if (isSubString(s, token))
+                return 0;
             distances.add(distance(s, token));
+        }
         for (String tag : ms.getTags()) {
             if (isSubString(s, tag))
                 return 0;

@@ -19,7 +19,6 @@ import com.brainydroid.filteringapp.filtering.MetaString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 
 
 public class FilteringActivity extends ActionBarActivity {
@@ -50,7 +49,7 @@ public class FilteringActivity extends ActionBarActivity {
     private LayoutInflater inflater;
     private HashMap<MetaString, LinearLayout> selectionViews = new HashMap<MetaString, LinearLayout>();
     private LinearLayout selectionLayout;
-    private HashSet<String> userStrings = new HashSet<String>();
+    private AutoCompleteAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +61,7 @@ public class FilteringActivity extends ActionBarActivity {
         inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         selectionLayout = (LinearLayout)findViewById(R.id.activity_activities_list);
 
-        final AutoCompleteAdapter adapter = new AutoCompleteAdapter(this, possibilities);
+        adapter = new AutoCompleteAdapter(this, possibilities);
         autoTextView = (AutoCompleteTextView)findViewById(R.id.activity_activities_autoCompleteTextView);
         autoTextView.setAdapter(adapter);
         autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -78,10 +77,12 @@ public class FilteringActivity extends ActionBarActivity {
 
     public void onAddItemClickListener(View view) {
         Log.i(TAG, "Adding item based on text");
-        String userString = autoTextView.getText().toString();
-        if (addSelection(new MetaString(userString))) {
+        MetaString userMetaString = new MetaString(autoTextView.getText().toString());
+        if (addSelection(userMetaString)) {
             autoTextView.setText("");
-            userStrings.add(userString);
+            // Update adapter
+            adapter.addPossibility(userMetaString);
+            // TODO: save this new item at the persistence layer
         }
     }
 
@@ -96,7 +97,7 @@ public class FilteringActivity extends ActionBarActivity {
     protected boolean addSelection(final MetaString ms) {
         Log.d(TAG, "Adding selection");
 
-        if (selectionViews.containsKey(ms) || userStrings.contains(ms.getOriginal())) {
+        if (selectionViews.containsKey(ms)) {
             Toast.makeText(this, "You already selected this item", Toast.LENGTH_LONG).show();
             return false;
         }
@@ -104,7 +105,6 @@ public class FilteringActivity extends ActionBarActivity {
         LinearLayout itemLayout = (LinearLayout)inflater.inflate(R.layout.item_selected_view,
                 selectionLayout, false);
         ((TextView)itemLayout.findViewById(R.id.item_text)).setText(ms.getOriginal());
-        ((TextView)itemLayout.findViewById(R.id.item_tags)).setText(ms.getJoinedTags());
 
         ImageButton.OnClickListener listener = new View.OnClickListener() {
             @Override
@@ -123,11 +123,15 @@ public class FilteringActivity extends ActionBarActivity {
     protected void removeSelection(MetaString ms) {
         Log.d(TAG, "Removing selection");
         if (!selectionViews.containsKey(ms)) {
-            Log.v(TAG, "Not item to remove");
+            Log.v(TAG, "No item to remove");
             return;
         }
 
         selectionLayout.removeView(selectionViews.get(ms));
+        selectionViews.remove(ms);
     }
 
 }
+
+// TODO: empty box flicker (update when still empty) - ids?
+// TODO: user-added item fails re-adding prevention  -

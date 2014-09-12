@@ -15,7 +15,6 @@ import android.widget.TextView;
 import com.brainydroid.filteringapp.filtering.Filterer;
 import com.brainydroid.filteringapp.filtering.MetaString;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,11 +23,8 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     private static String TAG = "AutoCompleteAdapter";
 
-    private static int VIEW_TYPE_NORMAL = 0;
-    private static int VIEW_TYPE_NOTHING = 1;
-
     private LayoutInflater inflater;
-    private Filter filter;
+    private Filterer filter;
     private ArrayList<MetaString> results = null;
     private HashSet<DataSetObserver> observers = new HashSet<DataSetObserver>();
     private HashMap<Long,MetaString> idCache = new HashMap<Long,MetaString>();
@@ -45,7 +41,7 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     @Override
     public boolean areAllItemsEnabled() {
-        return true;
+        return !areFilterResultsEmpty();
     }
 
     @Override
@@ -103,47 +99,28 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
         return true;
     }
 
-    private int getLayoutTypeId() {
-        if (areFilterResultsEmpty()) {
-            return R.layout.item_nothing;
-        } else {
-            return R.layout.item_view;
-        }
-    }
-
-    private int getViewTypeId() {
-        if (areFilterResultsEmpty()) {
-            return R.id.item_nothing_view;
-        } else {
-            return R.id.item_something_view;
-        }
-    }
-
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         LinearLayout layout;
         if (convertView == null || !(convertView instanceof LinearLayout)) {
-            layout = (LinearLayout)inflater.inflate(getLayoutTypeId(), parent, false);
+            layout = (LinearLayout)inflater.inflate(R.layout.item_view, parent, false);
         } else {
-            // If we have the right type of view, keep it. Otherwise inflate.
-            if (convertView.getId() == getViewTypeId()) {
-                layout = (LinearLayout)convertView;
-            } else {
-                layout = (LinearLayout)inflater.inflate(getLayoutTypeId(), parent, false);
-            }
+            layout = (LinearLayout)convertView;
         }
 
         MetaString item = getItem(position);
         ((TextView)layout.findViewById(R.id.item_text)).setText(item.getOriginal());
+        TextView tagsView = (TextView)layout.findViewById(R.id.item_tags);
         if (!areFilterResultsEmpty()) {
             String joinedTags = item.getJoinedTags();
-            TextView tagsView = (TextView)layout.findViewById(R.id.item_tags);
             if (joinedTags == null) {
                 tagsView.setVisibility(View.GONE);
             } else {
                 tagsView.setVisibility(View.VISIBLE);
                 tagsView.setText(joinedTags);
             }
+        } else {
+            tagsView.setVisibility(View.GONE);
         }
 
         return layout;
@@ -151,16 +128,12 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        if (areFilterResultsEmpty()) {
-            return VIEW_TYPE_NOTHING;
-        } else {
-            return VIEW_TYPE_NORMAL;
-        }
+        return 0;
     }
 
     @Override
     public int getViewTypeCount() {
-        return 2;
+        return 1;
     }
 
     @Override
@@ -176,13 +149,15 @@ public class AutoCompleteAdapter implements Filterable, ListAdapter {
 
     public void setResults(ArrayList<MetaString> results) {
         Log.d(TAG, "Setting results");
-        boolean oldResultsEmpty = areFilterResultsEmpty();
         this.results = results;
-        // Don't update if results were empty before and they still are now
-        if (observers.size() > 0 && (areFilterResultsEmpty() != oldResultsEmpty)) {
+        if (observers.size() > 0) {
             for (DataSetObserver observer : observers) {
                 observer.onChanged();
             }
         }
+    }
+
+    public void addPossibility(MetaString metaPossibility) {
+        filter.addPossibility(metaPossibility);
     }
 }

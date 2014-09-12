@@ -17,12 +17,30 @@
 
     </LinearLayout>
 
-    <AutoCompleteTextView
-        android:id="@+id/activity_activities_autoCompleteTextView"
-        android:hint="@string/search_activities"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textCapSentences"
-        android:completionThreshold="2" />
+        android:orientation="horizontal">
+
+        <AutoCompleteTextView
+            android:id="@+id/activity_activities_autoCompleteTextView"
+            android:hint="@string/search_activities"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/add_button"
+            android:layout_alignBottom="@id/add_button"
+            android:layout_margin="4dp"
+            android:inputType="textCapSentences"
+            android:completionThreshold="2" />
+
+        <Button
+            android:id="@id/add_button"
+            android:text="@string/add_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:onClick="onAddItemClickListener"/>
+
+    </RelativeLayout>
 
 </LinearLayout>
