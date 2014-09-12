@@ -45,7 +45,7 @@ public class FilteringActivity extends ActionBarActivity {
             "Writing (coding)", "Making a drawing", "Walking", "Waiting", "Actively thinking (reasoning)"
     }));
 
-    private AutoCompleteTextView textView;
+    private AutoCompleteTextView autoTextView;
     private LayoutInflater inflater;
     private HashMap<MetaString, LinearLayout> selectionViews = new HashMap<MetaString, LinearLayout>();
     private LinearLayout selectionLayout;
@@ -61,13 +61,14 @@ public class FilteringActivity extends ActionBarActivity {
         selectionLayout = (LinearLayout)findViewById(R.id.activity_activities_list);
 
         final AutoCompleteAdapter adapter = new AutoCompleteAdapter(this, possibilities);
-        textView = (AutoCompleteTextView)findViewById(R.id.activity_activities_autoCompleteTextView);
-        textView.setAdapter(adapter);
-        textView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        autoTextView = (AutoCompleteTextView)findViewById(R.id.activity_activities_autoCompleteTextView);
+        autoTextView.setAdapter(adapter);
+        autoTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.i(TAG, "Item " + position + " clicked (id " + id + ")");
                 addSelection(adapter.getItemById(id));
+                autoTextView.setText("");
             }
         });
     }
@@ -75,8 +76,8 @@ public class FilteringActivity extends ActionBarActivity {
     @Override
     public void onResume() {
         super.onResume();
-        textView.requestFocus();
-        ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(textView,
+        autoTextView.requestFocus();
+        ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(autoTextView,
                 InputMethodManager.SHOW_FORCED);
     }
 
@@ -101,7 +102,7 @@ public class FilteringActivity extends ActionBarActivity {
         };
         itemLayout.findViewById(R.id.item_delete).setOnClickListener(listener);
 
-        selectionLayout.addView(itemLayout);
+        selectionLayout.addView(itemLayout, 0);
         selectionViews.put(ms, itemLayout);
     }
 

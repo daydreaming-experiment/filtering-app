@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Filtering App</string>
-    <string name="start_typing">Start typing…</string>
+    <string name="search_activities">Search activities…</string>
     <string name="action_settings">Settings</string>
 
 </resources>

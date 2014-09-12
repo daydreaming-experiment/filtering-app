@@ -19,7 +19,7 @@
 
     <AutoCompleteTextView
         android:id="@+id/activity_activities_autoCompleteTextView"
-        android:hint="@string/start_typing"
+        android:hint="@string/search_activities"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textCapSentences"
